@@ -1,0 +1,150 @@
+set VDD=0.7
+set TEMP=300
+set WF=4.4
+
+set LG=0.015
+set R_SI=0.003
+set DIAMETER=0.006
+set LSP=0.004
+set LSD=0.012
+
+set T_SIO2=0.0005
+set T_HFO2=0.00205
+
+set NCH=1.0e15
+set NSD=3.5e20
+set NEXT=8.0e19
+
+set XMIN=-0.0235
+set XSRC_END=-0.0115
+set XGATE_L=-0.0075
+set XGATE_R=0.0075
+set XDRN_START=0.0115
+set XMAX=0.0235
+
+set R_AXIS=0.0
+set R_SIO2_OUT=0.0035
+set R_HFO2_OUT=0.00555
+set R_GATE_OUT=0.00755
+
+set STRUCT_OUT=nanowire_structure.str
+set IDVG_LOG=nanowire_idvg.log
+set FINAL_OUT=nanowire_final_bias.str
+
+go victorydevice
+
+mesh space.mult=1.0 cylindrical
+
+x.mesh loc=0.0000 spacing=0.00025
+x.mesh loc=0.0015 spacing=0.00025
+x.mesh loc=$R_SI spacing=0.00015
+x.mesh loc=$R_SIO2_OUT spacing=0.00010
+x.mesh loc=$R_HFO2_OUT spacing=0.00015
+x.mesh loc=$R_GATE_OUT spacing=0.00040
+
+y.mesh loc=$XMIN spacing=0.0010
+y.mesh loc=$XSRC_END spacing=0.0005
+y.mesh loc=$XGATE_L spacing=0.00025
+y.mesh loc=0.0000 spacing=0.00025
+y.mesh loc=$XGATE_R spacing=0.00025
+y.mesh loc=$XDRN_START spacing=0.0005
+y.mesh loc=$XMAX spacing=0.0010
+
+region num=1 material=Silicon x.min=0.0 x.max=$R_SI y.min=$XMIN y.max=$XMAX
+
+region num=2 material=Air x.min=$R_SI x.max=$R_GATE_OUT y.min=$XMIN y.max=$XSRC_END
+
+region num=3 material=Nitride x.min=$R_SI x.max=$R_GATE_OUT y.min=$XSRC_END y.max=$XGATE_L
+
+region num=4 material=SiO2 x.min=$R_SI x.max=$R_SIO2_OUT y.min=$XGATE_L y.max=$XGATE_R
+
+region num=5 material=HfO2 x.min=$R_SIO2_OUT x.max=$R_HFO2_OUT y.min=$XGATE_L y.max=$XGATE_R
+
+region num=6 material=Aluminum x.min=$R_HFO2_OUT x.max=$R_GATE_OUT y.min=$XGATE_L y.max=$XGATE_R
+
+region num=7 material=Nitride x.min=$R_SI x.max=$R_GATE_OUT y.min=$XGATE_R y.max=$XDRN_START
+
+region num=8 material=Air x.min=$R_SI x.max=$R_GATE_OUT y.min=$XDRN_START y.max=$XMAX
+
+electrode name=source x.min=0.0 x.max=$R_SI y.min=$XMIN y.max=$XMIN
+
+electrode name=drain x.min=0.0 x.max=$R_SI y.min=$XMAX y.max=$XMAX
+
+electrode name=gate region=6
+
+doping uniform p.type conc=$NCH region=1
+
+doping uniform n.type conc=$NSD x.min=0.0 x.max=$R_SI y.min=$XMIN y.max=$XSRC_END
+
+doping uniform n.type conc=$NEXT x.min=0.0 x.max=$R_SI y.min=$XSRC_END y.max=$XGATE_L
+
+doping uniform n.type conc=$NEXT x.min=0.0 x.max=$R_SI y.min=$XGATE_R y.max=$XDRN_START
+
+doping uniform n.type conc=$NSD x.min=0.0 x.max=$R_SI y.min=$XDRN_START y.max=$XMAX
+
+contact name=gate workfunction=$WF
+
+save outf=$STRUCT_OUT
+
+models fermi srh auger conmob fldmob bgn bbt.std bqp.n
+
+method newton trap
+
+solve init
+
+solve vdrain=0.01
+solve vdrain=0.05
+solve vdrain=0.10
+solve vdrain=0.20
+solve vdrain=0.40
+solve vdrain=$VDD
+
+log outf=$IDVG_LOG
+
+solve vgate=0.0
+solve vgate=0.02
+solve vgate=0.04
+solve vgate=0.06
+solve vgate=0.08
+solve vgate=0.10
+solve vgate=0.15
+solve vgate=0.20
+solve vgate=0.25
+solve vgate=0.30
+solve vgate=0.35
+solve vgate=0.40
+solve vgate=0.41
+solve vgate=0.42
+solve vgate=0.43
+solve vgate=0.44
+solve vgate=0.45
+solve vgate=0.46
+solve vgate=0.47
+solve vgate=0.48
+solve vgate=0.49
+solve vgate=0.50
+solve vgate=0.51
+solve vgate=0.52
+solve vgate=0.53
+solve vgate=0.54
+solve vgate=0.55
+solve vgate=0.56
+solve vgate=0.57
+solve vgate=0.58
+solve vgate=0.59
+solve vgate=0.60
+solve vgate=0.61
+solve vgate=0.62
+solve vgate=0.63
+solve vgate=0.64
+solve vgate=0.65
+solve vgate=0.66
+solve vgate=0.67
+solve vgate=0.68
+solve vgate=0.69
+solve vgate=$VDD
+
+output e.velocity e.mobility e.field j.electron
+save outf=$FINAL_OUT
+
+quit
